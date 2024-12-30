@@ -1,18 +1,15 @@
 package cmd
 
 import (
-	"e-wallet-wallet/external"
-	"e-wallet-wallet/helpers"
-	"e-wallet-wallet/internal/api"
-	"e-wallet-wallet/internal/interfaces"
-	"e-wallet-wallet/internal/repository"
-	"e-wallet-wallet/internal/services"
+	"e-wallet-transaction/external"
+	"e-wallet-transaction/helpers"
+	"e-wallet-transaction/internal/interfaces"
 	"github.com/gin-gonic/gin"
 	"log"
 )
 
 func ServeHTTP() {
-	d := dependencyInject()
+	_ = dependencyInject()
 
 	gin.SetMode(gin.ReleaseMode)
 
@@ -22,12 +19,7 @@ func ServeHTTP() {
 		log.Fatal("Failed to set trusted proxies", err)
 	}
 
-	walletV1 := r.Group("/wallet/v1")
-	walletV1.POST("/", d.WalletAPI.Create)
-	walletV1.PUT("/balance/credit", d.MiddlewareValidateToken, d.WalletAPI.CreditBalance)
-	walletV1.PUT("/balance/debit", d.MiddlewareValidateToken, d.WalletAPI.DebitBalance)
-	walletV1.GET("/balance", d.MiddlewareValidateToken, d.WalletAPI.GetBalance)
-	walletV1.GET("/history", d.MiddlewareValidateToken, d.WalletAPI.GetWalletHistory)
+	r.Group("/transaction/v1")
 
 	err = r.Run(":" + helpers.GetEnv("PORT", "8080"))
 	if err != nil {
@@ -37,19 +29,11 @@ func ServeHTTP() {
 }
 
 type Dependency struct {
-	WalletAPI interfaces.IWalletHandler
-	External  interfaces.IExternal
+	External interfaces.IExternal
 }
 
 func dependencyInject() *Dependency {
-	walletRepo := &repository.WalletRepository{DB: helpers.DB}
-	walletSvc := &services.WalletService{WalletRepository: walletRepo}
-	walletApi := &api.WalletHandler{WalletService: walletSvc}
-
 	ext := &external.External{}
 
-	return &Dependency{
-		WalletAPI: walletApi,
-		External:  ext,
-	}
+	return &Dependency{External: ext}
 }

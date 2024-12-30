@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"e-wallet-wallet/helpers"
+	"e-wallet-transaction/helpers"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )

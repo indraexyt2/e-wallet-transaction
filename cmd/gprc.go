@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"e-wallet-wallet/helpers"
+	"e-wallet-transaction/helpers"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"log"

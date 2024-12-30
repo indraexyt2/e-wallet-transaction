@@ -1,8 +1,8 @@
 package main
 
 import (
-	"e-wallet-wallet/cmd"
-	"e-wallet-wallet/helpers"
+	"e-wallet-transaction/cmd"
+	"e-wallet-transaction/helpers"
 )
 
 func main() {

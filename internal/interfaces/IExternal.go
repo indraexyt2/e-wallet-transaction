@@ -2,7 +2,7 @@ package interfaces
 
 import (
 	"context"
-	"e-wallet-wallet/internal/models"
+	"e-wallet-transaction/internal/models"
 )
 
 type IExternal interface {

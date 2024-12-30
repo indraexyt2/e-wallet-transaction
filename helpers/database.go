@@ -1,7 +1,7 @@
 package helpers
 
 import (
-	"e-wallet-wallet/internal/models"
+	"e-wallet-transaction/internal/models"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/mysql"
@@ -24,7 +24,7 @@ func SetupMySql() {
 
 	logrus.Info("Database initiated using gorm")
 
-	err = DB.AutoMigrate(&models.Wallet{}, &models.WalletTransaction{})
+	err = DB.AutoMigrate(&models.Transaction{})
 	if err != nil {
 		log.Fatal("Failed to migrate database", err)
 	}

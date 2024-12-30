@@ -2,8 +2,8 @@ package external
 
 import (
 	"context"
-	"e-wallet-wallet/external/proto/tokenvalidation"
-	"e-wallet-wallet/internal/models"
+	"e-wallet-transaction/external/proto/tokenvalidation"
+	"e-wallet-transaction/internal/models"
 	"fmt"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
