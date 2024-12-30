@@ -3,13 +3,16 @@ package cmd
 import (
 	"e-wallet-transaction/external"
 	"e-wallet-transaction/helpers"
+	"e-wallet-transaction/internal/api"
 	"e-wallet-transaction/internal/interfaces"
+	"e-wallet-transaction/internal/repository"
+	"e-wallet-transaction/internal/services"
 	"github.com/gin-gonic/gin"
 	"log"
 )
 
 func ServeHTTP() {
-	_ = dependencyInject()
+	d := dependencyInject()
 
 	gin.SetMode(gin.ReleaseMode)
 
@@ -19,7 +22,8 @@ func ServeHTTP() {
 		log.Fatal("Failed to set trusted proxies", err)
 	}
 
-	r.Group("/transaction/v1")
+	transactionV1 := r.Group("/transaction/v1")
+	transactionV1.POST("/create", d.MiddlewareValidateToken, d.CreateTransactionAPI.CreateTransaction)
 
 	err = r.Run(":" + helpers.GetEnv("PORT", "8080"))
 	if err != nil {
@@ -29,11 +33,19 @@ func ServeHTTP() {
 }
 
 type Dependency struct {
-	External interfaces.IExternal
+	External             interfaces.IExternal
+	CreateTransactionAPI interfaces.ITransactionHandler
 }
 
 func dependencyInject() *Dependency {
 	ext := &external.External{}
+	trxRepo := &repository.TransactionRepository{DB: helpers.DB}
 
-	return &Dependency{External: ext}
+	createTrxSvc := &services.TransactionService{TransactionRepo: trxRepo}
+	createTrxApi := &api.TransactionHandler{TransactionService: createTrxSvc}
+
+	return &Dependency{
+		External:             ext,
+		CreateTransactionAPI: createTrxApi,
+	}
 }

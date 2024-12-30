@@ -1,0 +1,109 @@
+package api
+
+import (
+	"e-wallet-transaction/constants"
+	"e-wallet-transaction/helpers"
+	"e-wallet-transaction/internal/interfaces"
+	"e-wallet-transaction/internal/models"
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"net/http"
+)
+
+type TransactionHandler struct {
+	TransactionService interfaces.ITransactionService
+}
+
+func (api *TransactionHandler) CreateTransaction(c *gin.Context) {
+	var (
+		log = helpers.Logger
+		req = &models.Transaction{}
+	)
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Error("failed to bind json", err)
+		helpers.SendResponseHTTP(
+			c,
+			http.StatusBadRequest,
+			false,
+			"failed to bind json",
+			nil,
+		)
+		return
+	}
+
+	if err := req.Validate(); err != nil {
+		log.Error("failed to validate request", err)
+		helpers.SendResponseHTTP(
+			c,
+			http.StatusBadRequest,
+			false,
+			"failed to validate request",
+			nil,
+		)
+		return
+	}
+
+	token, ok := c.Get("token")
+	if !ok {
+		log.Error("failed to get token")
+		helpers.SendResponseHTTP(
+			c,
+			http.StatusBadRequest,
+			false,
+			"failed to get token",
+			nil,
+		)
+		return
+	}
+
+	tokenData, ok := token.(*models.TokenData)
+	if !ok {
+		log.Error("failed to get token data")
+		helpers.SendResponseHTTP(
+			c,
+			http.StatusBadRequest,
+			false,
+			"failed to get token data",
+			nil,
+		)
+		return
+	}
+
+	if !constants.MapTransaction[req.TransactionType] {
+		log.Error("invalid transaction type")
+		helpers.SendResponseHTTP(
+			c,
+			http.StatusBadRequest,
+			false,
+			"invalid transaction type",
+			nil,
+		)
+		return
+	}
+
+	req.UserID = int(tokenData.UserID)
+
+	resp, err := api.TransactionService.CreateTransaction(c.Request.Context(), req)
+	if err != nil {
+		log.Error("failed to create transaction", err)
+		helpers.SendResponseHTTP(
+			c,
+			http.StatusInternalServerError,
+			false,
+			"failed to create transaction",
+			nil,
+		)
+		return
+	}
+
+	fmt.Println(resp)
+
+	helpers.SendResponseHTTP(
+		c,
+		http.StatusOK,
+		true,
+		"success",
+		resp,
+	)
+}
