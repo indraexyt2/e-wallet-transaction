@@ -1,5 +1,7 @@
 package constants
 
+import "time"
+
 const (
 	TransactionStatusPending  = "PENDING"
 	TransactionStatusSuccess  = "SUCCESS"
@@ -18,3 +20,13 @@ var MapTransaction = map[string]bool{
 	TransactionTypePurchase: true,
 	TransactionTypeRefund:   true,
 }
+
+var MapTransactionStatusFlow = map[string][]string{
+	TransactionStatusPending: {TransactionStatusSuccess, TransactionStatusFailed},
+	TransactionStatusSuccess: {TransactionStatusReversed},
+	TransactionStatusFailed:  {TransactionStatusSuccess},
+}
+
+const (
+	MaximumReversalDuration = time.Minute * 2
+)

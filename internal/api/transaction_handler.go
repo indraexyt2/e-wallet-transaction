@@ -107,3 +107,83 @@ func (api *TransactionHandler) CreateTransaction(c *gin.Context) {
 		resp,
 	)
 }
+
+func (api *TransactionHandler) UpdateTransactionStatus(c *gin.Context) {
+	var (
+		log = helpers.Logger
+		req models.UpdateStatusTransaction
+	)
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Error("failed to bind json", err)
+		helpers.SendResponseHTTP(
+			c,
+			http.StatusBadRequest,
+			false,
+			"failed to bind json",
+			nil,
+		)
+		return
+	}
+
+	req.Reference = c.Param("reference")
+
+	if err := req.Validate(); err != nil {
+		log.Error("failed to validate request", err)
+		helpers.SendResponseHTTP(
+			c,
+			http.StatusBadRequest,
+			false,
+			"failed to validate request",
+			nil,
+		)
+		return
+	}
+
+	token, ok := c.Get("token")
+	if !ok {
+		log.Error("failed to get token")
+		helpers.SendResponseHTTP(
+			c,
+			http.StatusBadRequest,
+			false,
+			"failed to get token",
+			nil,
+		)
+		return
+	}
+
+	tokenData, ok := token.(*models.TokenData)
+	if !ok {
+		log.Error("failed to get token data")
+		helpers.SendResponseHTTP(
+			c,
+			http.StatusBadRequest,
+			false,
+			"failed to get token data",
+			nil,
+		)
+		return
+	}
+
+	err := api.TransactionService.UpdateStatusTransaction(c.Request.Context(), tokenData, &req)
+	if err != nil {
+		log.Error("failed to update transaction status", err)
+		helpers.SendResponseHTTP(
+			c,
+			http.StatusInternalServerError,
+			false,
+			"failed to update transaction status",
+			nil,
+		)
+		return
+	}
+
+	helpers.SendResponseHTTP(
+		c,
+		http.StatusOK,
+		true,
+		"success",
+		nil,
+	)
+}
