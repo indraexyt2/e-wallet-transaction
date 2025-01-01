@@ -187,3 +187,121 @@ func (api *TransactionHandler) UpdateTransactionStatus(c *gin.Context) {
 		nil,
 	)
 }
+
+func (api *TransactionHandler) GetTransaction(c *gin.Context) {
+	var (
+		log = helpers.Logger
+	)
+
+	token, ok := c.Get("token")
+	if !ok {
+		log.Error("failed to get token")
+		helpers.SendResponseHTTP(
+			c,
+			http.StatusBadRequest,
+			false,
+			"failed to get token",
+			nil,
+		)
+		return
+	}
+
+	tokenData, ok := token.(*models.TokenData)
+	if !ok {
+		log.Error("failed to get token data")
+		helpers.SendResponseHTTP(
+			c,
+			http.StatusBadRequest,
+			false,
+			"failed to get token data",
+			nil,
+		)
+		return
+	}
+
+	resp, err := api.TransactionService.GetTransaction(c.Request.Context(), int(tokenData.UserID))
+	if err != nil {
+		log.Error("failed to update transaction status", err)
+		helpers.SendResponseHTTP(
+			c,
+			http.StatusInternalServerError,
+			false,
+			"failed to update transaction status",
+			nil,
+		)
+		return
+	}
+
+	helpers.SendResponseHTTP(
+		c,
+		http.StatusOK,
+		true,
+		"success",
+		resp,
+	)
+}
+
+func (api *TransactionHandler) GetTransactionDetail(c *gin.Context) {
+	var (
+		log = helpers.Logger
+	)
+
+	reference := c.Param("reference")
+	if reference == "" {
+		log.Error("reference is required")
+		helpers.SendResponseHTTP(
+			c,
+			http.StatusBadRequest,
+			false,
+			"reference is required",
+			nil,
+		)
+	}
+
+	token, ok := c.Get("token")
+	if !ok {
+		log.Error("failed to get token")
+		helpers.SendResponseHTTP(
+			c,
+			http.StatusBadRequest,
+			false,
+			"failed to get token",
+			nil,
+		)
+		return
+	}
+
+	_, ok = token.(*models.TokenData)
+	if !ok {
+		log.Error("failed to get token data")
+		helpers.SendResponseHTTP(
+			c,
+			http.StatusBadRequest,
+			false,
+			"failed to get token data",
+			nil,
+		)
+		return
+	}
+
+	resp, err := api.TransactionService.GetTransactionDetail(c.Request.Context(), reference)
+	if err != nil {
+		log.Error("failed to update transaction status", err)
+		helpers.SendResponseHTTP(
+			c,
+			http.StatusInternalServerError,
+			false,
+			"failed to update transaction status",
+			nil,
+		)
+		return
+	}
+
+	helpers.SendResponseHTTP(
+		c,
+		http.StatusOK,
+		true,
+		"success",
+		resp,
+	)
+}

@@ -36,3 +36,11 @@ func (r *TransactionRepository) UpdateStatusTransaction(ctx context.Context, ref
 		Where("reference = ?", reference).
 		Updates(map[string]interface{}{"transaction_status": status, "additional_info": additionalInfo}).Error
 }
+
+func (r *TransactionRepository) GetTransaction(ctx context.Context, userID int) ([]models.Transaction, error) {
+	var (
+		resp []models.Transaction
+	)
+	err := r.DB.Where("user_id = ?", userID).Find(&resp).Order("id DESC").Error
+	return resp, err
+}
