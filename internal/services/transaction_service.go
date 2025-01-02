@@ -139,6 +139,20 @@ func (s *TransactionService) UpdateStatusTransaction(ctx context.Context, tokenD
 		return errors.Wrap(err, "failed to update status transaction")
 	}
 
+	trx.TransactionStatus = req.TransactionStatus
+	s.sendNotification(ctx, *tokenData, *trx)
+	return nil
+}
+
+func (s *TransactionService) sendNotification(ctx context.Context, tokenData models.TokenData, trx models.Transaction) error {
+	if trx.TransactionType == constants.TransactionTypePurchase && trx.TransactionStatus == constants.TransactionStatusSuccess {
+		s.External.SendNotification(ctx, tokenData.Email, "purchase_success", map[string]string{
+			"full_name":   tokenData.FullName,
+			"description": trx.Description,
+			"reference":   trx.Reference,
+			"date":        trx.CreatedAt.Format("02 Jan 2006"),
+		})
+	}
 	return nil
 }
 
@@ -148,4 +162,50 @@ func (s *TransactionService) GetTransaction(ctx context.Context, userID int) ([]
 
 func (s *TransactionService) GetTransactionDetail(ctx context.Context, reference string) (*models.Transaction, error) {
 	return s.TransactionRepo.GetTransactionByReference(ctx, reference, true)
+}
+
+func (s *TransactionService) RefundTransaction(ctx context.Context, tokenData *models.TokenData, req *models.RefundTransaction) (*models.CreateTransactionResponse, error) {
+	var (
+		resp = &models.CreateTransactionResponse{}
+	)
+
+	trx, err := s.TransactionRepo.GetTransactionByReference(ctx, req.Reference, false)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get transaction by reference")
+	}
+
+	if trx.TransactionStatus == constants.TransactionStatusSuccess && trx.TransactionType != constants.TransactionTypePurchase {
+		return resp, errors.New("failed to refund transaction due to transaction status is success")
+	}
+
+	refundReference := "REFUND-" + req.Reference
+	reqCreditBalance := external.UpdateBalance{
+		Reference: refundReference,
+		Amount:    trx.Amount,
+	}
+
+	_, err = s.External.CreditBalance(ctx, tokenData.Token, reqCreditBalance)
+	if err != nil {
+		return resp, errors.Wrap(err, "failed to credit balance")
+	}
+
+	transaction := models.Transaction{
+		UserID:            int(tokenData.UserID),
+		Amount:            trx.Amount,
+		TransactionType:   constants.TransactionTypeRefund,
+		TransactionStatus: constants.TransactionStatusSuccess,
+		Reference:         refundReference,
+		Description:       req.Description,
+		AdditionalInfo:    req.AdditionalInfo,
+	}
+
+	err = s.TransactionRepo.CreateTransaction(ctx, &transaction)
+	if err != nil {
+		return resp, errors.Wrap(err, "failed to create transaction refund")
+	}
+
+	resp.Reference = transaction.Reference
+	resp.TransactionStatus = transaction.TransactionStatus
+
+	return resp, nil
 }

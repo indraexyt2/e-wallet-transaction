@@ -30,3 +30,7 @@ var MapTransactionStatusFlow = map[string][]string{
 const (
 	MaximumReversalDuration = time.Minute * 2
 )
+
+const (
+	SuccessMessage = "success"
+)

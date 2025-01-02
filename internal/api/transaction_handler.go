@@ -305,3 +305,83 @@ func (api *TransactionHandler) GetTransactionDetail(c *gin.Context) {
 		resp,
 	)
 }
+
+func (api *TransactionHandler) RefundTransaction(c *gin.Context) {
+	var (
+		log = helpers.Logger
+		req = &models.RefundTransaction{}
+	)
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Error("failed to bind json", err)
+		helpers.SendResponseHTTP(
+			c,
+			http.StatusBadRequest,
+			false,
+			"failed to bind json",
+			nil,
+		)
+		return
+	}
+
+	if err := req.Validate(); err != nil {
+		log.Error("failed to validate request", err)
+		helpers.SendResponseHTTP(
+			c,
+			http.StatusBadRequest,
+			false,
+			"failed to validate request",
+			nil,
+		)
+		return
+	}
+
+	token, ok := c.Get("token")
+	if !ok {
+		log.Error("failed to get token")
+		helpers.SendResponseHTTP(
+			c,
+			http.StatusBadRequest,
+			false,
+			"failed to get token",
+			nil,
+		)
+		return
+	}
+
+	tokenData, ok := token.(*models.TokenData)
+	if !ok {
+		log.Error("failed to get token data")
+		helpers.SendResponseHTTP(
+			c,
+			http.StatusBadRequest,
+			false,
+			"failed to get token data",
+			nil,
+		)
+		return
+	}
+
+	resp, err := api.TransactionService.RefundTransaction(c.Request.Context(), tokenData, req)
+	if err != nil {
+		log.Error("failed to create transaction", err)
+		helpers.SendResponseHTTP(
+			c,
+			http.StatusInternalServerError,
+			false,
+			"failed to refund transaction",
+			nil,
+		)
+		return
+	}
+
+	fmt.Println(resp)
+
+	helpers.SendResponseHTTP(
+		c,
+		http.StatusOK,
+		true,
+		"success",
+		resp,
+	)
+}

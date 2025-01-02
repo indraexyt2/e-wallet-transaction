@@ -42,3 +42,14 @@ func (u *UpdateStatusTransaction) Validate() error {
 	v := validator.New()
 	return v.Struct(u)
 }
+
+type RefundTransaction struct {
+	Reference      string `json:"reference" valid:"required"`
+	Description    string `json:"description" valid:"required"`
+	AdditionalInfo string `json:"additional_info"`
+}
+
+func (I *RefundTransaction) Validate() error {
+	v := validator.New()
+	return v.Struct(I)
+}

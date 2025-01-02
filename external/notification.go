@@ -2,9 +2,9 @@ package external
 
 import (
 	"context"
-	"e-wallet-ums/constants"
-	"e-wallet-ums/external/proto/notification"
-	"e-wallet-ums/helpers"
+	"e-wallet-transaction/constants"
+	"e-wallet-transaction/external/proto/notification"
+	"e-wallet-transaction/helpers"
 	"fmt"
 	"google.golang.org/grpc"
 )

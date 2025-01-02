@@ -27,6 +27,7 @@ func ServeHTTP() {
 	transactionV1.PUT("/update-status/:reference", d.MiddlewareValidateToken, d.CreateTransactionAPI.UpdateTransactionStatus)
 	transactionV1.GET("/", d.MiddlewareValidateToken, d.CreateTransactionAPI.GetTransaction)
 	transactionV1.GET("/:reference", d.MiddlewareValidateToken, d.CreateTransactionAPI.GetTransactionDetail)
+	transactionV1.POST("/refund", d.MiddlewareValidateToken, d.CreateTransactionAPI.RefundTransaction)
 
 	err = r.Run(":" + helpers.GetEnv("PORT", "8080"))
 	if err != nil {
